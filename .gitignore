@@ -1,0 +1,35 @@
+# Environments & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build outputs
+target/
+**/target/
+dist/
+**/dist/
+build/
+**/build/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# IDE & Editor caches
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+
+skillmint-backend/src/main/resources/application.properties

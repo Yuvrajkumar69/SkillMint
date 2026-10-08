@@ -1,0 +1,3 @@
+-- DEPRECATED: This file is no longer used by runtime.
+-- The single authoritative Flyway migration is located at:
+-- skillmint-backend/src/main/resources/db/migration/V1__init_schema.sql
