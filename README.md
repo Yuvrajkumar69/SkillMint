@@ -28,6 +28,15 @@ Built with a **Spring Boot 3.4 REST API (Java 21)** backend, a **React 19 + Vite
   - HMAC-SHA256 signature verification for client callbacks (`/api/payment/verify`).
   - Idempotent Razorpay Webhook endpoint (`POST /api/payment/webhook`).
   - Automated enrollment creation, cart clearing, and transactional email confirmations upon payment capture.
+ 
+  - ### 🎥 Course Content & Video Learning
+
+SkillMint currently provides course learning content through **YouTube-hosted educational videos**, which are played inside the protected course learning experience after a course is purchased and the student is enrolled.
+
+This approach allows the platform to demonstrate the complete **course purchase → enrollment → learning → video playback** workflow while the platform is in its development/early-stage phase. Since original proprietary course content is not currently available, YouTube videos are being used as learning resources for demonstration purposes.
+
+> 🚀 **Future Implementation:** We plan to introduce our own original course content and dedicated video/content infrastructure, allowing SkillMint to provide a fully self-hosted learning experience with proprietary courses, structured lessons, and additional learning resources.
+
 
 ### 🛡️ Admin Management Console (`/admin`)
 - **System Overview**: Live revenue metrics, total active users, course counts, enrollments, and system status indicators.
