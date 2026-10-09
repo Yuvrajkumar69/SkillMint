@@ -61,7 +61,7 @@ public class PasswordResetService {
 
             try {
                 emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage());
             }
         }
@@ -95,7 +95,7 @@ public class PasswordResetService {
         // Send notification email
         try {
             emailService.sendPasswordChangedEmail(user.getEmail(), user.getFullName());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.warn("Failed to send password changed notification email to {}: {}", user.getEmail(), e.getMessage());
         }
     }

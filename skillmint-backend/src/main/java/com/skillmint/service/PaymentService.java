@@ -27,13 +27,13 @@ import java.util.*;
 @Slf4j
 public class PaymentService {
 
-    @Value("${razorpay.key_id:}")
+    @Value("${razorpay.key.id:${razorpay.key_id:${RAZORPAY_KEY_ID:}}}")
     private String keyId;
 
-    @Value("${razorpay.key_secret:}")
+    @Value("${razorpay.key.secret:${razorpay.key_secret:${RAZORPAY_KEY_SECRET:}}}")
     private String keySecret;
 
-    @Value("${razorpay.webhook_secret:secret_webhook_key_123}")
+    @Value("${razorpay.webhook_secret:${RAZORPAY_WEBHOOK_SECRET:secret_webhook_key_123}}")
     private String webhookSecret;
 
     private final OrderRepository orderRepository;
@@ -42,6 +42,36 @@ public class PaymentService {
     private final CartRepository cartRepository;
     private final EnrollmentService enrollmentService;
     private final EmailService emailService;
+
+    public String getKeySecret() {
+        if (keySecret != null && !keySecret.isBlank()) {
+            return keySecret.trim();
+        }
+        String envSecret = System.getenv("RAZORPAY_KEY_SECRET");
+        if (envSecret != null && !envSecret.isBlank()) {
+            return envSecret.trim();
+        }
+        String propSecret = System.getProperty("razorpay.key.secret");
+        if (propSecret != null && !propSecret.isBlank()) {
+            return propSecret.trim();
+        }
+        return keySecret != null ? keySecret.trim() : "";
+    }
+
+    public String getKeyId() {
+        if (keyId != null && !keyId.isBlank()) {
+            return keyId.trim();
+        }
+        String envId = System.getenv("RAZORPAY_KEY_ID");
+        if (envId != null && !envId.isBlank()) {
+            return envId.trim();
+        }
+        String propId = System.getProperty("razorpay.key.id");
+        if (propId != null && !propId.isBlank()) {
+            return propId.trim();
+        }
+        return keyId != null ? keyId.trim() : "";
+    }
 
     @Transactional
     public Map<String, Object> createOrder(User user, CreateOrderRequest request) throws RazorpayException {
@@ -107,13 +137,15 @@ public class PaymentService {
             throw new BadRequestException("Order amount must be at least ₹1.00");
         }
 
-        if (keyId == null || keyId.isBlank() || keySecret == null || keySecret.isBlank()) {
+        String effectiveKeyId = getKeyId();
+        String effectiveKeySecret = getKeySecret();
+        if (effectiveKeyId.isBlank() || effectiveKeySecret.isBlank()) {
             throw new BadRequestException("Razorpay payment gateway credentials are not configured");
         }
 
         log.info("Creating Razorpay order for user: {}, amount: {} paise, orderNumber: {}", user.getEmail(), amountInPaise, orderNumber);
 
-        RazorpayClient client = new RazorpayClient(keyId, keySecret);
+        RazorpayClient client = new RazorpayClient(effectiveKeyId, effectiveKeySecret);
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", amountInPaise);
         orderRequest.put("currency", "INR");
@@ -136,18 +168,22 @@ public class PaymentService {
         response.put("orderNumber", orderNumber);
         response.put("amount", amountInPaise);
         response.put("currency", "INR");
-        response.put("keyId", keyId);
+        response.put("keyId", effectiveKeyId);
         return response;
     }
 
     @Transactional
     public void verifyPayment(User user, VerifyPaymentRequest request) {
-        if (request == null || request.getRazorpayOrderId() == null || request.getRazorpayPaymentId() == null || request.getRazorpaySignature() == null) {
+        if (user == null || user.getId() == null) {
+            throw new BadRequestException("User authentication required for payment verification");
+        }
+        if (request == null || request.getRazorpayOrderId() == null || request.getRazorpayPaymentId() == null || request.getRazorpaySignature() == null || request.getOrderNumber() == null) {
             throw new BadRequestException("Invalid payment verification request payload");
         }
 
         // Verify Razorpay signature
         if (!verifySignature(request.getRazorpayOrderId(), request.getRazorpayPaymentId(), request.getRazorpaySignature())) {
+            log.warn("Payment verification failed for order {}: signature mismatch", request.getOrderNumber());
             throw new BadRequestException("Payment verification failed: Invalid signature");
         }
 
@@ -242,27 +278,29 @@ public class PaymentService {
                     order.getUser().getEmail(), order.getUser().getFullName(),
                     courseNames, order.getTotalAmount(), order.getOrderNumber()
             );
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.error("Failed to send payment confirmation email for order {}: {}", order.getOrderNumber(), e.getMessage());
         }
     }
 
     private boolean verifySignature(String orderId, String paymentId, String signature) {
-        return verifyHmacSha256(orderId + "|" + paymentId, signature, keySecret);
+        String secret = getKeySecret();
+        return verifyHmacSha256(orderId + "|" + paymentId, signature, secret);
     }
 
     private boolean verifyHmacSha256(String data, String expectedSignature, String secret) {
         try {
-            if (secret == null || secret.isBlank()) return false;
+            if (secret == null || secret.isBlank() || expectedSignature == null || expectedSignature.isBlank()) return false;
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) sb.append(String.format("%02x", b));
-            return sb.toString().equals(expectedSignature);
-        } catch (Exception e) {
+            return sb.toString().equalsIgnoreCase(expectedSignature.trim());
+        } catch (Throwable e) {
             log.error("HMAC verification error: {}", e.getMessage());
             return false;
         }
     }
+}
 }

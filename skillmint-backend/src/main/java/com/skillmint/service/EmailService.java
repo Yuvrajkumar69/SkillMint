@@ -160,7 +160,7 @@ public class EmailService {
             helper.setText(body, true);
             mailSender.send(message);
             log.info("Email sent to {}: {}", toEmail, subject);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
             // Logged without crashing caller to enforce transactional isolation
         }

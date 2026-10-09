@@ -26,13 +26,42 @@ public class CartController {
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addToCart(
             @AuthenticationPrincipal User user,
-            @RequestBody Map<String, Object> body) {
-        if (body == null || !body.containsKey("courseId") || body.get("courseId") == null) {
+            @RequestBody(required = false) Map<String, Object> body) {
+        if (user == null || user.getId() == null) {
+            throw new BadRequestException("User authentication required");
+        }
+
+        Long courseId = extractCourseId(body);
+        if (courseId == null) {
             throw new BadRequestException("courseId is required");
         }
-        Long courseId = ((Number) body.get("courseId")).longValue();
+
         cartService.addToCart(user, courseId);
         return ResponseEntity.ok(ApiResponse.success("Added to cart"));
+    }
+
+    private Long extractCourseId(Map<String, Object> body) {
+        if (body == null || body.isEmpty()) {
+            return null;
+        }
+        Object rawId = body.get("courseId");
+        if (rawId == null) {
+            rawId = body.get("course_id");
+        }
+        if (rawId == null) {
+            rawId = body.get("id");
+        }
+        if (rawId == null) {
+            return null;
+        }
+        if (rawId instanceof Number number) {
+            return number.longValue();
+        }
+        try {
+            return Long.parseLong(rawId.toString().trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @DeleteMapping("/remove/{courseId}")
