@@ -119,8 +119,8 @@ RAZORPAY_WEBHOOK_SECRET=secret_webhook_key_123
 # SMTP Email Configuration
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=genieashwani@gmail.com
-MAIL_PASSWORD=hpgg kgnb aeit usmm
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
 
 # Application URLs
 APP_FRONTEND_URL=http://localhost:5173
