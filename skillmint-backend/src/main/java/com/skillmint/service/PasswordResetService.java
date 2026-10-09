@@ -59,11 +59,7 @@ public class PasswordResetService {
             String resetLink = frontendUrl + "/reset-password?token=" + tokenValue;
             log.info("Password reset initiated for user: {}. Reset link: {}", user.getEmail(), resetLink);
 
-            try {
-                emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
-            } catch (Throwable e) {
-                log.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage());
-            }
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
         }
         // Always return success message to prevent email enumeration
     }
@@ -93,10 +89,6 @@ public class PasswordResetService {
         tokenRepository.save(token);
 
         // Send notification email
-        try {
-            emailService.sendPasswordChangedEmail(user.getEmail(), user.getFullName());
-        } catch (Throwable e) {
-            log.warn("Failed to send password changed notification email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        emailService.sendPasswordChangedEmail(user.getEmail(), user.getFullName());
     }
 }

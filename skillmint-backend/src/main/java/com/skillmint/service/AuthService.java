@@ -69,12 +69,8 @@ public class AuthService {
         emailVerificationTokenRepository.save(verificationToken);
 
         // Send verification email
-        try {
-            String verifyUrl = frontendUrl + "/verify-email?token=" + token;
-            emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
-        } catch (Exception e) {
-            log.warn("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        String verifyUrl = frontendUrl + "/verify-email?token=" + token;
+        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
 
         String jwt = jwtTokenProvider.generateToken(user);
 
@@ -133,11 +129,7 @@ public class AuthService {
         emailVerificationTokenRepository.save(verificationToken);
 
         // Send welcome email after email verification
-        try {
-            emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
-        } catch (Exception e) {
-            log.warn("Failed to send welcome email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
     }
 
     @Transactional
@@ -163,10 +155,6 @@ public class AuthService {
         emailVerificationTokenRepository.save(verificationToken);
 
         String verifyUrl = frontendUrl + "/verify-email?token=" + token;
-        try {
-            emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
-        } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
     }
 }
