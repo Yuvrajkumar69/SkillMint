@@ -69,10 +69,11 @@ api.interceptors.response.use(
         window.dispatchEvent(new Event('skillmint_auth_expired'));
 
         const path = window.location.pathname;
-        const isAuthPage = path.startsWith('/signin') ||
-                           path.startsWith('/signup') ||
-                           path.startsWith('/forgot-password') ||
-                           path.startsWith('/reset-password');
+        const normalizedPath = path.replace(/^\/+/, '/');
+        const isAuthPage = normalizedPath.startsWith('/signin') ||
+                           normalizedPath.startsWith('/signup') ||
+                           normalizedPath.startsWith('/forgot-password') ||
+                           normalizedPath.startsWith('/reset-password');
 
         if (!isAuthPage) {
           window.location.href = `/signin?redirect=${encodeURIComponent(path)}`;

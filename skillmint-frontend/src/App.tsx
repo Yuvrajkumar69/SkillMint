@@ -74,6 +74,7 @@ function AppRoutes() {
           <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
           <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="//reset-password" element={<ResetPasswordPage />} />
           {/* Protected */}
           <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
