@@ -3,13 +3,18 @@ package com.skillmint.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +30,11 @@ public class EmailService {
     @Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
-    private final JavaMailSender mailSender;
+    @Value("${BREVO_API_KEY:${brevo.api.key:}}")
+    private String brevoApiKey;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
     public void sendWelcomeEmail(String toEmail, String name) {
         String subject = "Welcome to " + appName + "! 🎓";
@@ -152,16 +161,31 @@ public class EmailService {
             if (fromEmail == null || fromEmail.isBlank() || fromEmail.contains("smtp-brevo.com") || fromEmail.equals("noreply@skillmint.com")) {
                 fromEmail = "singhpunam5091@gmail.com";
             }
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "SkillMint");
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(body, true);
-            mailSender.send(message);
-            log.info("Email sent to {}: {}", toEmail, subject);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", brevoApiKey);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            Map<String, Object> requestBody = new HashMap<>();
+            
+            Map<String, String> sender = new HashMap<>();
+            sender.put("email", fromEmail);
+            sender.put("name", "SkillMint");
+            requestBody.put("sender", sender);
+            
+            Map<String, String> to = new HashMap<>();
+            to.put("email", toEmail);
+            requestBody.put("to", List.of(to));
+            
+            requestBody.put("subject", subject);
+            requestBody.put("htmlContent", body);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(BREVO_API_URL, HttpMethod.POST, entity, String.class);
+            log.info("Email sent to {}: {}, response status: {}", toEmail, subject, response.getStatusCode());
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+            log.warn("Failed to send email to {}: {}", toEmail, e.getMessage());
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
     }
