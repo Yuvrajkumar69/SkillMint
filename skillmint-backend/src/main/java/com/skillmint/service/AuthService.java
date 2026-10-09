@@ -163,6 +163,10 @@ public class AuthService {
         emailVerificationTokenRepository.save(verificationToken);
 
         String verifyUrl = frontendUrl + "/verify-email?token=" + token;
-        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
+        }
     }
 }
