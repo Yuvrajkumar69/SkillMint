@@ -24,7 +24,12 @@ type FormData = z.infer<typeof schema>;
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token') || '';
+  const tokenParam = searchParams.get('token');
+  const tokenFromWindow = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('token')
+    : null;
+  const token = (tokenParam || tokenFromWindow || '').trim();
+
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -34,10 +39,10 @@ export default function ResetPasswordPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    if (!token) { toast.error('Invalid reset link'); return; }
+    if (!token) { toast.error('Invalid or missing reset link'); return; }
     setIsLoading(true);
     try {
-      await authApi.resetPassword({ token, ...data });
+      await authApi.resetPassword({ token, newPassword: data.newPassword, confirmPassword: data.confirmPassword });
       setSuccess(true);
       setTimeout(() => navigate('/signin'), 3000);
     } catch (err: unknown) {
@@ -50,10 +55,15 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-[#e2e8f0] mb-2">Invalid Reset Link</h2>
-          <Link to="/forgot-password" className="btn-primary mt-4 inline-flex">Request new link</Link>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md bg-[#111827] border border-[#1e293b] rounded-2xl p-8 shadow-2xl text-center">
+          <h2 className="text-xl font-bold text-[#e2e8f0] mb-2">Invalid or Missing Reset Link</h2>
+          <p className="text-[#64748b] text-sm mb-6">
+            The password reset token is missing or incomplete in your URL. Please request a new link.
+          </p>
+          <Link to="/forgot-password" className="btn-primary inline-flex justify-center w-full py-3">
+            Request New Reset Link
+          </Link>
         </div>
       </div>
     );
